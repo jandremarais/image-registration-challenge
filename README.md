@@ -12,3 +12,26 @@ Inside `src` we have the core functions and utilities to perform image registrat
 cd src
 poetry install 
 ```
+
+## Getting started
+
+The simplest way to run this code on your machine is to do it in a docker container.
+You will need to build the image with
+```
+docker build ...
+```
+
+or you can pull it form github actions with:
+
+```
+docker pull ...
+```
+
+If you don't care to install any missing system dependencies, feel free to just run:
+```
+python -m venv /path/to/venv
+source /path/to/venv/bin/activate
+cd app
+poetry install
+```
+to have create a virtual environment with all the python dependencies installed.
