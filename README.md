@@ -34,4 +34,4 @@ source /path/to/venv/bin/activate
 cd app
 poetry install
 ```
-to have create a virtual environment with all the python dependencies installed.
+to create a virtual environment with all the python dependencies installed.
