@@ -114,8 +114,8 @@ class RgbRed(Dataset):
     def __len__(self):
         return len(self.rgb_paths)
 
-    def show(self, index, **kwargs):
-        t, (a, dx, dy) = self[index]
+    @staticmethod
+    def plot_pair(t: torch.Tensor, **kwargs):
         rgb = t[:3]
         red = t[-1]
         fig, ax = plt.subplots(1, 2, **kwargs)
@@ -123,5 +123,10 @@ class RgbRed(Dataset):
         ax[1].imshow(red, cmap="gray")
         ax[0].grid()
         ax[1].grid()
+        return ax
+
+    def show(self, index, **kwargs):
+        t, (a, dx, dy) = self[index]
+        ax = self.plot_pair(t, **kwargs)
         ax[1].set_title(f"angle: {round(a, 2)}, dx: {dx}, dy: {dy}")
         return ax
