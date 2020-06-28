@@ -7,11 +7,13 @@ import pandas as pd
 from pathlib import Path
 from .data import Surveys
 from torch.utils.data import DataLoader
+from argparse import ArgumentParser
 
 
 class Model(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, hparams):
         super().__init__()
+        self.hparams = hparams
         self.l1 = nn.Linear(128 * 128 * 4, 3)
 
     def forward(self, x):
@@ -20,7 +22,8 @@ class Model(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        return {"loss": F.mse_loss(y_hat, y)}
+        logs = {"loss": F.mse_loss(y_hat, y)}
+        return {"loss": F.mse_loss(y_hat, y), "log": logs}
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -29,10 +32,11 @@ class Model(pl.LightningModule):
 
     def validation_epoch_end(self, outputs):
         val_loss_mean = torch.stack([x["val_loss"] for x in outputs]).mean()
-        return {"val_loss_mean": val_loss_mean}
+        logs = {"val_loss_mean": val_loss_mean}
+        return {"val_loss": val_loss_mean, "log": logs}
 
     def prepare_data(self):
-        data = Path("/home/jan/data/aero")
+        data = Path(self.hparams.data_path)
 
         master_train = pd.read_pickle(data / "master_manifest_train_red.pkl")
         master_valid = pd.read_pickle(data / "master_manifest_val_red.pkl")
@@ -63,10 +67,22 @@ class Model(pl.LightningModule):
         self.valid_ds = Surveys(valid_rgbs, valid_reds, sz=128, big_crop_sz=500)
 
     def train_dataloader(self):
-        return DataLoader(self.train_ds, batch_size=8, shuffle=True)
+        return DataLoader(
+            self.train_ds, batch_size=self.hparams.batch_size, shuffle=True
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.valid_ds, batch_size=16, shuffle=False)
+        return DataLoader(
+            self.valid_ds, batch_size=self.hparams.batch_size * 2, shuffle=False
+        )
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.02)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+
+    @staticmethod
+    def add_model_specific_args(parent_parser):
+        parser = ArgumentParser(parents=[parent_parser], add_help=False)
+        parser.add_argument("--learning_rate", default=0.02, type=float)
+        parser.add_argument("--batch_size", default=8, type=int)
+        parser.add_argument("--data_path", type=str, default="./")
+        return parser
