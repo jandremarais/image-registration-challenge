@@ -9,6 +9,8 @@ python = "^3.8"
 torch = "^1.5.1"
 torchvision = "^0.6.1"
 Pillow = "^7.1.2"
+pandas = "^1.0.5"
+pytorch-lightning = "^0.8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
