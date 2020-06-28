@@ -123,5 +123,5 @@ class RgbRed(Dataset):
         ax[1].imshow(red, cmap="gray")
         ax[0].grid()
         ax[1].grid()
-        ax[1].set_title(f"angle: {a}, dx: {dx}, dy: {dy}")
+        ax[1].set_title(f"angle: {round(a, 2)}, dx: {dx}, dy: {dy}")
         return ax
