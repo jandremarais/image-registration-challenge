@@ -125,6 +125,15 @@ class RgbRed(Dataset):
         ax[1].grid()
         return ax
 
+    @staticmethod
+    def overlay(t: torch.Tensor, **kwargs):
+        print(t.shape)
+        rgb = t[:3]
+        red = t[-1]
+        plt.figure(**kwargs)
+        plt.imshow(rgb.permute(1, 2, 0))
+        plt.imshow(red, alpha=0.5)
+
     def show(self, index, **kwargs):
         t, (a, dx, dy) = self[index]
         ax = self.plot_pair(t, **kwargs)
