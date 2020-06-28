@@ -296,7 +296,7 @@ class Tiles(Dataset):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         def _get_big_crop():
             bi, bj, bh, bw = transforms.RandomCrop.get_params(
-                red, (self.big_crop_sz, self.big_crop_sz)
+                red, (self.sz, self.sz)
             )
 
             big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
@@ -327,11 +327,11 @@ class Tiles(Dataset):
             vflip = _noop
 
         rgb_tfms = transforms.Compose(
-            [big_crop, vflip, hflip, rotate1, transforms.ToTensor()]
+            [rotate1, big_crop, vflip, hflip, transforms.ToTensor()]
         )
 
         red_tfms = transforms.Compose(
-            [big_crop, vflip, hflip, rotate1, transforms.ToTensor()]
+            [rotate1, big_crop, vflip, hflip, transforms.ToTensor()]
         )
         return rgb_tfms(rgb)[:3], red_tfms(red)
 
