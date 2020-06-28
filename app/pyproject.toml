@@ -6,6 +6,13 @@ authors = ["jandremarais <maraisjandre9@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+numpy = "^1.19.0"
+pandas = "^1.0.5"
+Pillow = "^7.1.2"
+matplotlib = "^3.2.2"
+scikit-learn = "^0.23.1"
+torch = "^1.5.1"
+torchvision = "^0.6.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.782"
