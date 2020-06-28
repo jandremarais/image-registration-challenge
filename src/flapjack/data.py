@@ -1,7 +1,7 @@
 import random
 from functools import partial
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import torch
 from matplotlib import pyplot as plt
@@ -176,7 +176,6 @@ class Surveys(Dataset):
     def transform(
         self, rgb: Image.Image, red: Image.Image, a: float, dx: int, dy: int
     ) -> torch.Tensor:
-
         def _get_big_crop():
             bi, bj, bh, bw = transforms.RandomCrop.get_params(
                 red, (self.big_crop_sz, self.big_crop_sz)
@@ -240,11 +239,7 @@ class Surveys(Dataset):
         rgb = self.rgbs[i]
         red = self.reds[i]
         a, (dx, dy), _, _ = transforms.RandomAffine.get_params(
-            (-15, 15),
-            (0.1, 0.1),
-            (1, 1),
-            (0, 0),
-            (self.sz, self.sz),
+            (-15, 15), (0.1, 0.1), (1, 1), (0, 0), (self.sz, self.sz),
         )
         x = self.transform(rgb, red, a, dx, dy)
         return x, torch.tensor([a, dx, dy], dtype=torch.float32)
@@ -277,3 +272,75 @@ class Surveys(Dataset):
         ax = self.plot_pair(t, **kwargs)
         ax[1].set_title(f"angle: {a.round()}, dx: {dx}, dy: {dy}")
         return ax
+
+
+class Tiles(Dataset):
+    def __init__(
+        self,
+        rgbs: List[Image.Image],
+        reds: List[Image.Image],
+        sz: int = 500,
+        crops_per_image: int = 50,
+    ):
+        assert len(rgbs) == len(reds)
+        self.rgbs = [
+            im1.resize(im2.size, resample=Image.BILINEAR)
+            for im1, im2 in zip(rgbs, reds)
+        ]
+        self.reds = reds
+        self.sz = sz
+        self.crops_per_image = crops_per_image
+
+    def transform(
+        self, rgb: Image.Image, red: Image.Image
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        def _get_big_crop():
+            bi, bj, bh, bw = transforms.RandomCrop.get_params(
+                red, (self.big_crop_sz, self.big_crop_sz)
+            )
+
+            big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
+
+            tfms = transforms.Compose([big_crop, transforms.ToTensor()])
+            tmp = tfms(rgb)
+            alpha_c = tmp[3]
+            if (alpha_c > 0).float().mean() < 0.5:
+                return _get_big_crop()
+            else:
+                return big_crop
+
+        big_crop = _get_big_crop()
+        a1 = transforms.RandomRotation.get_params((-360, 360))
+        rotate1 = partial(TF.rotate, angle=a1, resample=Image.BILINEAR)
+
+        def _noop(x):
+            return x
+
+        if random.random() > 0.5:
+            hflip = TF.hflip
+        else:
+            hflip = _noop
+
+        if random.random() > 0.5:
+            vflip = TF.vflip
+        else:
+            vflip = _noop
+
+        rgb_tfms = transforms.Compose(
+            [big_crop, vflip, hflip, rotate1, transforms.ToTensor()]
+        )
+
+        red_tfms = transforms.Compose(
+            [big_crop, vflip, hflip, rotate1, transforms.ToTensor()]
+        )
+        return rgb_tfms(rgb)[:3], red_tfms(red)
+
+    def __getitem__(self, index):
+        i = index // self.crops_per_image
+        rgb = self.rgbs[i]
+        red = self.reds[i]
+        x = self.transform(rgb, red)
+        return x
+
+    def __len__(self):
+        return len(self.rgbs) * self.crops_per_image
