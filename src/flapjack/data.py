@@ -176,12 +176,23 @@ class Surveys(Dataset):
     def transform(
         self, rgb: Image.Image, red: Image.Image, a: float, dx: int, dy: int
     ) -> torch.Tensor:
-        bi, bj, bh, bw = transforms.RandomCrop.get_params(
-            red, (self.big_crop_sz, self.big_crop_sz)
-        )
 
-        big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
+        def _get_big_crop():
+            bi, bj, bh, bw = transforms.RandomCrop.get_params(
+                red, (self.big_crop_sz, self.big_crop_sz)
+            )
 
+            big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
+
+            tfms = transforms.Compose([big_crop, transforms.ToTensor()])
+            tmp = tfms(rgb)
+            alpha_c = tmp[3]
+            if (alpha_c > 0).float().mean() < 0.5:
+                return _get_big_crop()
+            else:
+                return big_crop
+
+        big_crop = _get_big_crop()
         a1 = transforms.RandomRotation.get_params((-360, 360))
         rotate1 = partial(TF.rotate, angle=a1, resample=Image.BILINEAR)
 
@@ -201,7 +212,7 @@ class Surveys(Dataset):
         center_crop = transforms.CenterCrop(self.sz)
 
         rgb_tfms = transforms.Compose(
-            [big_crop, vflip, hflip, rotate1, center_crop, transforms.ToTensor(),]
+            [big_crop, vflip, hflip, rotate1, center_crop, transforms.ToTensor()]
         )
         affine_tfms = partial(
             TF.affine,
@@ -222,7 +233,7 @@ class Surveys(Dataset):
                 transforms.ToTensor(),
             ]
         )
-        return torch.cat([rgb_tfms(rgb), red_tfms(red)])
+        return torch.cat([rgb_tfms(rgb)[:3], red_tfms(red)])
 
     def __getitem__(self, index):
         i = index // self.crops_per_image
@@ -230,13 +241,13 @@ class Surveys(Dataset):
         red = self.reds[i]
         a, (dx, dy), _, _ = transforms.RandomAffine.get_params(
             (-15, 15),
-            (0.05, 0.05),
+            (0.1, 0.1),
             (1, 1),
             (0, 0),
-            (self.big_crop_sz, self.big_crop_sz),
+            (self.sz, self.sz),
         )
         x = self.transform(rgb, red, a, dx, dy)
-        return x, torch.tensor([a, dx, dy])
+        return x, torch.tensor([a, dx, dy], dtype=torch.float32)
 
     def __len__(self):
         return len(self.rgbs) * self.crops_per_image
