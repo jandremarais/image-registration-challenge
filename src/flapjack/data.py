@@ -109,7 +109,7 @@ class RgbRed(Dataset):
             (self.big_crop_sz, self.big_crop_sz),
         )
         x = self.transform(rgb, red, a, dx, dy)
-        return x, (a, dx, dy)
+        return x, torch.tensor([a, dx, dy])
 
     def __len__(self):
         return len(self.rgb_paths)
@@ -138,4 +138,131 @@ class RgbRed(Dataset):
         t, (a, dx, dy) = self[index]
         ax = self.plot_pair(t, **kwargs)
         ax[1].set_title(f"angle: {round(a, 2)}, dx: {dx}, dy: {dy}")
+        return ax
+
+
+class Surveys(Dataset):
+    def __init__(
+        self,
+        rgbs: List[Image.Image],
+        reds: List[Image.Image],
+        sz: int = 128,
+        big_crop_sz: int = 300,
+        crops_per_image: int = 50,
+    ):
+        """Initialise the dataset.
+
+        Args:
+            rgb_paths (List[Path]): Paths to the rgb orthomosaic tif files.
+            red_paths (List[Path]): Paths to the RED (aligned) orthomosaic tif files
+                in the same order as the RGB paths, such that the rgb_paths[i] and
+                red_paths[i] is of the same field/survey.
+            sz (int): final image side length.
+            big_crop_sz (int): Side length of square crop to be taken on both images.
+                The idea with this size reduction is to reduce computation time.
+                But still keeping the image context to avoid empty edges.
+            crops_per_image (int): Number of crops per survey.
+        """
+        assert len(rgbs) == len(reds)
+        self.rgbs = [
+            im1.resize(im2.size, resample=Image.BILINEAR)
+            for im1, im2 in zip(rgbs, reds)
+        ]
+        self.reds = reds
+        self.sz = sz
+        self.big_crop_sz = big_crop_sz
+        self.crops_per_image = crops_per_image
+
+    def transform(
+        self, rgb: Image.Image, red: Image.Image, a: float, dx: int, dy: int
+    ) -> torch.Tensor:
+        bi, bj, bh, bw = transforms.RandomCrop.get_params(
+            red, (self.big_crop_sz, self.big_crop_sz)
+        )
+
+        big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
+
+        a1 = transforms.RandomRotation.get_params((-360, 360))
+        rotate1 = partial(TF.rotate, angle=a1, resample=Image.BILINEAR)
+
+        def _noop(x):
+            return x
+
+        if random.random() > 0.5:
+            hflip = TF.hflip
+        else:
+            hflip = _noop
+
+        if random.random() > 0.5:
+            vflip = TF.vflip
+        else:
+            vflip = _noop
+
+        center_crop = transforms.CenterCrop(self.sz)
+
+        rgb_tfms = transforms.Compose(
+            [big_crop, vflip, hflip, rotate1, center_crop, transforms.ToTensor(),]
+        )
+        affine_tfms = partial(
+            TF.affine,
+            angle=a,
+            translate=(dx, dy),
+            scale=1,
+            shear=0,
+            resample=Image.BILINEAR,
+        )
+        red_tfms = transforms.Compose(
+            [
+                big_crop,
+                vflip,
+                hflip,
+                rotate1,
+                affine_tfms,
+                center_crop,
+                transforms.ToTensor(),
+            ]
+        )
+        return torch.cat([rgb_tfms(rgb), red_tfms(red)])
+
+    def __getitem__(self, index):
+        i = index // self.crops_per_image
+        rgb = self.rgbs[i]
+        red = self.reds[i]
+        a, (dx, dy), _, _ = transforms.RandomAffine.get_params(
+            (-15, 15),
+            (0.05, 0.05),
+            (1, 1),
+            (0, 0),
+            (self.big_crop_sz, self.big_crop_sz),
+        )
+        x = self.transform(rgb, red, a, dx, dy)
+        return x, torch.tensor([a, dx, dy])
+
+    def __len__(self):
+        return len(self.rgbs) * self.crops_per_image
+
+    @staticmethod
+    def plot_pair(t: torch.Tensor, **kwargs):
+        rgb = t[:3]
+        red = t[-1]
+        fig, ax = plt.subplots(1, 2, **kwargs)
+        ax[0].imshow(rgb.permute(1, 2, 0))
+        ax[1].imshow(red, cmap="gray")
+        ax[0].grid()
+        ax[1].grid()
+        return ax
+
+    @staticmethod
+    def overlay(t: torch.Tensor, **kwargs):
+        print(t.shape)
+        rgb = t[:3]
+        red = t[-1]
+        plt.figure(**kwargs)
+        plt.imshow(rgb.permute(1, 2, 0))
+        plt.imshow(red, alpha=0.5)
+
+    def show(self, index, **kwargs):
+        t, (a, dx, dy) = self[index]
+        ax = self.plot_pair(t, **kwargs)
+        ax[1].set_title(f"angle: {a.round()}, dx: {dx}, dy: {dy}")
         return ax
