@@ -32,7 +32,7 @@ def dl_from_master(df: pd.DataFrame, data: Path):
     red_ims = load_from_paths(red_paths, data)
 
     ds = Tiles(rgb_ims, red_ims, crops_per_image=100)
-    dl = DataLoader(ds, num_workers=2, shuffle=False, batch_size=10)
+    dl = DataLoader(ds, num_workers=6, shuffle=False, batch_size=10)
     return dl
 
 
@@ -53,14 +53,12 @@ def _save(o):
     np.save(o[0], o[1])
 
 
-# x = next(iter(train_dl))
-
 total = 0
 for n, x in enumerate(iter(train_dl)):
     print(n)
     crop_list = tfms(x)
     fp = [data / f"crops/train/tile_{total + i}.npy" for i in range(len(x))]
-    total += n
+    total += len(x)
 
     with ProcessPoolExecutor(max_workers=10) as e:
         e.map(_save, [(fp, a) for fp, a in zip(fp, crop_list)])
@@ -70,13 +68,7 @@ for n, x in enumerate(iter(valid_dl)):
     print(n)
     crop_list = tfms(x)
     fp = [data / f"crops/valid/tile_{total + i}.npy" for i in range(len(x))]
-    total += n
+    total += len(x)
 
     with ProcessPoolExecutor(max_workers=10) as e:
         e.map(_save, [(fp, a) for fp, a in zip(fp, crop_list)])
-
-
-
-rgb = np.load('/home/jan/data/aero/crops/train/rgb/tile_rgb_1.npy')
-plt.imshow(rgb)
-fig, ax = plt.subplots(1, 3, figsize=(30, 10))
