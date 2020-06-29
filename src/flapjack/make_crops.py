@@ -1,3 +1,5 @@
+# !%reload_ext autoreload
+# !%autoreload 2
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List
@@ -5,6 +7,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 import torch
+from matplotlib import pyplot as plt
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -29,7 +32,7 @@ def dl_from_master(df: pd.DataFrame, data: Path):
     red_ims = load_from_paths(red_paths, data)
 
     ds = Tiles(rgb_ims, red_ims, crops_per_image=100)
-    dl = DataLoader(ds, num_workers=1, shuffle=False, batch_size=16)
+    dl = DataLoader(ds, num_workers=2, shuffle=False, batch_size=10)
     return dl
 
 
@@ -50,24 +53,21 @@ def _save(o):
     np.save(o[0], o[1])
 
 
+# x = next(iter(train_dl))
+
 total = 0
-for n, (x1, x2) in enumerate(iter(train_dl)):
+for n, x in enumerate(iter(train_dl)):
     print(n)
-    crop_list_rgb = tfms(x1)
-    crop_list_red = tfms(x2)
-    rgb_fp = [data / f"crops/train/rgb/tile_rgb_{total + i}.npy" for i in range(len(x1))]
-    red_fp = [data / f"crops/train/red/tile_red_{total + i}.npy" for i in range(len(x1))]
+    crop_list = tfms(x)
+    fp = [data / f"crops/train/tile_{total + i}.npy" for i in range(len(x))]
     total += n
 
-    with ProcessPoolExecutor(max_workers=12) as e:
-        e.map(_save, [(fp, a) for fp, a in zip(rgb_fp, crop_list_rgb)])
-
-    with ProcessPoolExecutor(max_workers=12) as e:
-        e.map(_save, [(fp, a) for fp, a in zip(red_fp, crop_list_red)])
+    with ProcessPoolExecutor(max_workers=10) as e:
+        e.map(_save, [(fp, a) for fp, a in zip(fp, crop_list)])
 
 total = 0
 for n, (x1, x2) in enumerate(iter(valid_dl)):
-
+    print(n)
     crop_list_rgb = tfms(x1)
     crop_list_red = tfms(x2)
     rgb_fp = [data / f"crops/valid/rgb/tile_rgb_{total + i}.npy" for i in range(len(x1))]
@@ -81,3 +81,8 @@ for n, (x1, x2) in enumerate(iter(valid_dl)):
         e.map(_save, [(fp, a) for fp, a in zip(red_fp, crop_list_red)])
 
 
+
+
+rgb = np.load('/home/jan/data/aero/crops/train/rgb/tile_rgb_1.npy')
+plt.imshow(rgb)
+fig, ax = plt.subplots(1, 3, figsize=(30, 10))
