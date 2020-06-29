@@ -41,12 +41,18 @@ class Model(pl.LightningModule):
 
     def train_dataloader(self):
         return DataLoader(
-            self.train_ds, batch_size=self.hparams.batch_size, shuffle=True
+            self.train_ds,
+            batch_size=self.hparams.batch_size,
+            shuffle=True,
+            num_workers=self.hparams.nw,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            self.valid_ds, batch_size=self.hparams.batch_size * 2, shuffle=False
+            self.valid_ds,
+            batch_size=self.hparams.batch_size * 2,
+            shuffle=False,
+            num_workers=self.hparams.nw,
         )
 
     def configure_optimizers(self):
@@ -57,5 +63,6 @@ class Model(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=0.02, type=float)
         parser.add_argument("--batch_size", default=8, type=int)
+        parser.add_argument("--nw", default=1, type=int)
         parser.add_argument("--data_path", type=str, default="./")
         return parser
