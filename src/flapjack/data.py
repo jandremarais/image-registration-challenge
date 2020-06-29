@@ -277,3 +277,15 @@ class Misaligned(Dataset):
         y = self.sample_y()
         x = self.transform(x, *y)
         return x, torch.tensor(y, dtype=torch.float32)
+
+    @staticmethod
+    def plot(x, y=None, sidebyside=True, **kwargs):
+        if sidebyside:
+            fig, ax = plt.subplots(1, 2, **kwargs)
+            ax[0].imshow(x[:3].permute(1, 2, 0).numpy())
+            ax[1].imshow(x[3].numpy(), cmap='gray')
+        else:
+            fig, ax = plt.subplots(1, 1, **kwargs)
+            ax.imshow(x[:3].permute(1, 2, 0).numpy(), alpha=0.5)
+            ax.imshow(x[3].numpy(), cmap='gray', alpha=0.5)
+        return ax
