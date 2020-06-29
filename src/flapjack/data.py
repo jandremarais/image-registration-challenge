@@ -215,12 +215,52 @@ class Misaligned(Dataset):
         self.sz = sz
         self.angle = angle
         self.translation = translation
+        self.mean = (0, 0, 0, 0)
+        self.std = (1, 1, 1, 1)
 
     def __len__(self):
         return len(self.filenames)
 
+    def rgb_transform(self, x):
+        tfms = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.ToPILImage(),
+                transforms.CenterCrop(self.sz),
+                transforms.ToTensor(),
+                transforms.Normalize(self.mean[:3], self.std[:3]),
+            ]
+        )
+        return tfms(x)
+
+    def red_transform(self, x, angle, dx, dy):
+        affine_tfms = partial(
+            TF.affine,
+            angle=angle,
+            translate=(dx, dy),
+            scale=1,
+            shear=0,
+            resample=Image.BILINEAR,
+        )
+        tfms = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.ToPILImage(mode='F'),
+                affine_tfms,
+                transforms.CenterCrop(self.sz),
+                transforms.ToTensor(),
+                transforms.Normalize(self.mean[3], self.std[3]),
+            ]
+        )
+        return tfms(x)
+
     def transform(self, x, angle, dx, dy):
-        return x
+        return torch.cat(
+            [
+                self.rgb_transform(x[..., :3]),
+                self.red_transform(x[..., 3], angle, dx, dy),
+            ]
+        )
 
     def sample_y(self):
         a, (dx, dy), _, _ = transforms.RandomAffine.get_params(
@@ -233,7 +273,7 @@ class Misaligned(Dataset):
         return a, dx, dy
 
     def __getitem__(self, index):
-        x = np.load(self.filenames)
+        x = np.load(self.filenames[index])
         y = self.sample_y()
         x = self.transform(x, *y)
         return x, torch.tensor(y, dtype=torch.float32)
