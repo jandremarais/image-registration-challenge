@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from PIL import Image
@@ -161,16 +162,12 @@ class Tiles(Dataset):
         self.sz = sz
         self.crops_per_image = crops_per_image
 
-    def transform(
-        self, rgb: Image.Image, red: Image.Image
-    ) -> torch.Tensor:
+    def transform(self, rgb: Image.Image, red: Image.Image) -> torch.Tensor:
 
         a1 = transforms.RandomRotation.get_params((-360, 360))
         rotate1 = partial(TF.rotate, angle=a1, resample=Image.BILINEAR)
 
-        bi, bj, bh, bw = transforms.RandomCrop.get_params(
-            red, (self.sz, self.sz)
-        )
+        bi, bj, bh, bw = transforms.RandomCrop.get_params(red, (self.sz, self.sz))
 
         big_crop = partial(TF.crop, top=bi, left=bj, height=bh, width=bw)
 
@@ -210,6 +207,33 @@ class Tiles(Dataset):
 
 
 class Misaligned(Dataset):
-    def __init__(self, path: Path):
+    def __init__(
+        self, path: Path, sz: int = 128, angle: int = 15, translation: float = 0.1
+    ):
         super().__init__()
-        self
+        self.filenames = list(path.iterdir())
+        self.sz = sz
+        self.angle = angle
+        self.translation = translation
+
+    def __len__(self):
+        return len(self.filenames)
+
+    def transform(self, x, angle, dx, dy):
+        return x
+
+    def sample_y(self):
+        a, (dx, dy), _, _ = transforms.RandomAffine.get_params(
+            (-self.angle, self.angle),
+            (self.translation, self.translation),
+            (1, 1),
+            (0, 0),
+            (self.sz, self.sz),
+        )
+        return a, dx, dy
+
+    def __getitem__(self, index):
+        x = np.load(self.filenames)
+        y = self.sample_y()
+        x = self.transform(x, *y)
+        return x, torch.tensor(y, dtype=torch.float32)
