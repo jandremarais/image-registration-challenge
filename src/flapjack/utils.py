@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 def compute_stats(ds: Dataset):
     dl = DataLoader(
         ds,
-        batch_size=10,
+        batch_size=32,
         num_workers=1,
         shuffle=False
     )

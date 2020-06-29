@@ -80,8 +80,8 @@ class Misaligned(Dataset):
         sz: int = 128,
         angle: int = 15,
         translation: float = 0.1,
-        mean: Tuple[float, float, float, float] = (0.5107, 0.4931, 0.4041, 0.0231),
-        std: Tuple[float, float, float, float] = (0.1560, 0.1328, 0.1185, 0.0095),
+        mean: Tuple[float, float, float, float] = (0.4972, 0.4805, 0.3937, 0.0225),
+        std: Tuple[float, float, float, float] = (0.1704, 0.1468, 0.1301, 0.0102),
     ):
         super().__init__()
         self.filenames = list(path.iterdir())
@@ -99,6 +99,7 @@ class Misaligned(Dataset):
             [
                 transforms.ToTensor(),
                 transforms.ToPILImage(),
+                transforms.Resize(300),
                 transforms.CenterCrop(self.sz),
                 transforms.ToTensor(),
                 transforms.Normalize(self.mean[:3], self.std[:3]),
@@ -119,6 +120,7 @@ class Misaligned(Dataset):
             [
                 transforms.ToTensor(),
                 transforms.ToPILImage(mode="F"),
+                transforms.Resize(300),
                 affine_tfms,
                 transforms.CenterCrop(self.sz),
                 transforms.ToTensor(),
@@ -144,6 +146,7 @@ class Misaligned(Dataset):
             (self.sz, self.sz),
         )
         return a, dx, dy
+        # return a, 0, 0
 
     def __getitem__(self, index):
         x = np.load(self.filenames[index])
