@@ -7,7 +7,6 @@ from typing import List
 import numpy as np
 import pandas as pd
 import torch
-from matplotlib import pyplot as plt
 from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import transforms
