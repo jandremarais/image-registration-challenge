@@ -2,10 +2,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import nn
-from PIL import Image
-import pandas as pd
 from pathlib import Path
-from .data import Surveys
+from .data import Misaligned
 from torch.utils.data import DataLoader
 from argparse import ArgumentParser
 
@@ -38,33 +36,8 @@ class Model(pl.LightningModule):
     def prepare_data(self):
         data = Path(self.hparams.data_path)
 
-        master_train = pd.read_pickle(data / "master_manifest_train_red.pkl")
-        master_valid = pd.read_pickle(data / "master_manifest_val_red.pkl")
-        train_ids = master_train["survey_id"].unique()
-        valid_ids = master_valid["survey_id"].unique()
-
-        train_rgb_paths = [
-            data / f"survey_{idx}/reference/orthomosaic_visible.tif"
-            for idx in train_ids
-        ]
-        train_red_paths = [
-            data / f"survey_{idx}/target/aligned/red/red.tif" for idx in train_ids
-        ]
-        valid_rgb_paths = [
-            data / f"survey_{idx}/reference/orthomosaic_visible.tif"
-            for idx in valid_ids
-        ]
-        valid_red_paths = [
-            data / f"survey_{idx}/target/aligned/red/red.tif" for idx in valid_ids
-        ]
-
-        train_rgbs = [Image.open(o) for o in train_rgb_paths]
-        train_reds = [Image.open(o) for o in train_red_paths]
-        valid_rgbs = [Image.open(o) for o in valid_rgb_paths]
-        valid_reds = [Image.open(o) for o in valid_red_paths]
-
-        self.train_ds = Surveys(train_rgbs, train_reds, sz=128, big_crop_sz=500)
-        self.valid_ds = Surveys(valid_rgbs, valid_reds, sz=128, big_crop_sz=500)
+        self.train_ds = Misaligned(data / "train")
+        self.valid_ds = Misaligned(data / "valid")
 
     def train_dataloader(self):
         return DataLoader(
