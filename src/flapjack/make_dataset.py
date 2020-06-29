@@ -137,7 +137,7 @@ for idx in train_ids:
         if (x[..., 0] == 0).mean() > 0.5:
             continue
         else:
-            ts = int(time.time())
+            ts = int(time.time() * 1000)
             np.save(data / f"{folder}/train/images/image_{idx}_{ts}.npy", x)
             np.save(data / f"{folder}/train/targets/target_{idx}_{ts}.npy", y)
             n += 1
@@ -158,7 +158,7 @@ for idx in valid_ids:
         if (x[..., 0] == 0).mean() > 0.5:
             continue
         else:
-            ts = int(time.time())
+            ts = int(time.time() * 1000)
             np.save(data / f"{folder}/valid/images/image_{idx}_{ts}.npy", x)
             np.save(data / f"{folder}/valid/targets/target_{idx}_{ts}.npy", y)
             n += 1
