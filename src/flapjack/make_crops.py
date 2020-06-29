@@ -66,20 +66,14 @@ for n, x in enumerate(iter(train_dl)):
         e.map(_save, [(fp, a) for fp, a in zip(fp, crop_list)])
 
 total = 0
-for n, (x1, x2) in enumerate(iter(valid_dl)):
+for n, x in enumerate(iter(valid_dl)):
     print(n)
-    crop_list_rgb = tfms(x1)
-    crop_list_red = tfms(x2)
-    rgb_fp = [data / f"crops/valid/rgb/tile_rgb_{total + i}.npy" for i in range(len(x1))]
-    red_fp = [data / f"crops/valid/red/tile_red_{total + i}.npy" for i in range(len(x1))]
+    crop_list = tfms(x)
+    fp = [data / f"crops/valid/tile_{total + i}.npy" for i in range(len(x))]
     total += n
 
-    with ProcessPoolExecutor(max_workers=12) as e:
-        e.map(_save, [(fp, a) for fp, a in zip(rgb_fp, crop_list_rgb)])
-
-    with ProcessPoolExecutor(max_workers=12) as e:
-        e.map(_save, [(fp, a) for fp, a in zip(red_fp, crop_list_red)])
-
+    with ProcessPoolExecutor(max_workers=10) as e:
+        e.map(_save, [(fp, a) for fp, a in zip(fp, crop_list)])
 
 
 
