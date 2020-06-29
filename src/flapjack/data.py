@@ -208,15 +208,21 @@ class Tiles(Dataset):
 
 class Misaligned(Dataset):
     def __init__(
-        self, path: Path, sz: int = 128, angle: int = 15, translation: float = 0.1
+        self,
+        path: Path,
+        sz: int = 128,
+        angle: int = 15,
+        translation: float = 0.1,
+        mean: Tuple[float, float, float, float] = (0.5107, 0.4931, 0.4041, 0.0231),
+        std: Tuple[float, float, float, float] = (0.1560, 0.1328, 0.1185, 0.0095),
     ):
         super().__init__()
         self.filenames = list(path.iterdir())
         self.sz = sz
         self.angle = angle
         self.translation = translation
-        self.mean = (0, 0, 0, 0)
-        self.std = (1, 1, 1, 1)
+        self.mean = mean
+        self.std = std
 
     def __len__(self):
         return len(self.filenames)
@@ -245,7 +251,7 @@ class Misaligned(Dataset):
         tfms = transforms.Compose(
             [
                 transforms.ToTensor(),
-                transforms.ToPILImage(mode='F'),
+                transforms.ToPILImage(mode="F"),
                 affine_tfms,
                 transforms.CenterCrop(self.sz),
                 transforms.ToTensor(),
@@ -283,9 +289,9 @@ class Misaligned(Dataset):
         if sidebyside:
             fig, ax = plt.subplots(1, 2, **kwargs)
             ax[0].imshow(x[:3].permute(1, 2, 0).numpy())
-            ax[1].imshow(x[3].numpy(), cmap='gray')
+            ax[1].imshow(x[3].numpy(), cmap="gray")
         else:
             fig, ax = plt.subplots(1, 1, **kwargs)
             ax.imshow(x[:3].permute(1, 2, 0).numpy(), alpha=0.5)
-            ax.imshow(x[3].numpy(), cmap='gray', alpha=0.5)
+            ax.imshow(x[3].numpy(), cmap="gray", alpha=0.5)
         return ax
