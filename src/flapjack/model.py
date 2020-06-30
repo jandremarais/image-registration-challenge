@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision.models.resnet import BasicBlock, Bottleneck, conv1x1
 
@@ -148,6 +149,8 @@ class Model(pl.LightningModule):
 
     def forward(self, x):
         x = self.rn(x)
+        x = F.sigmoid(x)
+        x = 2 * x - 1
         return x
 
     def training_step(self, batch, batch_idx):
