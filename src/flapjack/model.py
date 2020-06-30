@@ -201,7 +201,7 @@ class Model(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=0.02, type=float)
         parser.add_argument("--epochs", default=50, type=int)
-        parser.add_argument("--batch_size", default=8, type=int)
+        parser.add_argument("--batch_size", default=32, type=int)
         parser.add_argument("--nw", default=1, type=int)
         parser.add_argument("--sz", default=128, type=int)
         parser.add_argument("--data_path", type=str, default="./")
