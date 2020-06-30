@@ -23,3 +23,13 @@ def compute_stats(ds: Dataset):
     std /= nb_samples
 
     return mean, std
+
+
+def warp_from_target(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    sz = x.shape[0]
+    dst = np.array([[0, 0], [sz - 1, 0], [sz - 1, sz - 1], [0, sz - 1]]).astype(
+        np.float32
+    )
+    warp_mat = cv2.getAffineTransform(dst[:3] - y[:3], dst[:3])
+    red_aligned = cv2.warpAffine(x[..., -1], warp_mat, (sz, sz))
+    return np.concatenate([x[..., :3], red_aligned[..., None]], -1)
