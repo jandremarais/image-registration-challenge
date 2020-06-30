@@ -50,7 +50,7 @@ class Misaligned(Dataset):
         x = np.load(self.image_fns[index])
         y = np.load(self.target_fns[index])
         x = self.transform(x)
-        return x, y
+        return x, torch.flatten(torch.tensor(y))
 
     def __len__(self):
         return len(self.image_fns)
