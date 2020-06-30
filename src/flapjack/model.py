@@ -143,14 +143,16 @@ class Model(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        self.rn = ResNet(BasicBlock, [3, 4, 6, 3], n_in=4)
-        self.rn.fc = nn.Linear(512, 8)
+        rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=2)
+        # rn = ResNet(Bottleneck, [3, 4, 6, 3], n_in=2, groups=32, width_per_group=4)
+        mods = list(rn.children())[:-2]  + [nn.Conv2d(512, 2, 1, stride=4)]
+        self.m = nn.Sequential(*mods)
         # self.rn.fc = nn.Conv2d(512, 2, 1)
 
     def forward(self, x):
-        x = self.rn(x)
-        # x = F.sigmoid(x)
-        # x = 0.5 * x - 0.25
+        x = self.m(x)
+        x = F.sigmoid(x)
+        x = 0.5 * x - 0.25
         return x
 
     def training_step(self, batch, batch_idx):
@@ -180,8 +182,8 @@ class Model(pl.LightningModule):
     def prepare_data(self):
         data = Path(self.hparams.data_path)
 
-        self.train_ds = Misaligned(data / "train", sz=self.hparams.sz)
-        self.valid_ds = Misaligned(data / "valid", sz=self.hparams.sz)
+        self.train_ds = Misaligned(data / "train", sz=256)
+        self.valid_ds = Misaligned(data / "valid", sz=256)
 
     def train_dataloader(self):
         return DataLoader(
