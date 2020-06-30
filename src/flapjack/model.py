@@ -142,8 +142,9 @@ class Model(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=4)
+        self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=2)
         self.rn.fc = nn.Linear(512, 8)
+        # self.rn.fc = nn.Conv2d(512, 2, 1)
 
     def forward(self, x):
         x = self.rn(x)
