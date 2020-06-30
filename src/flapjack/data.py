@@ -20,10 +20,10 @@ class Misaligned(Dataset):
         self,
         path: Path,
         sz: int = 128,
-        # mean=(0.4571, 0.4437, 0.3610, 0.0208),
-        # std=(0.1910, 0.1690, 0.1431, 0.0111),
-        mean=(0.4382, 0.0208),
-        std=(0.1704, 0.0111)
+        mean=(0.4571, 0.4437, 0.3610, 0.0208),
+        std=(0.1910, 0.1690, 0.1431, 0.0111),
+        # mean=(0.4382, 0.0208),
+        # std=(0.1704, 0.0111)
     ):
         super().__init__()
         self.image_fns = list((path / "images").iterdir())
@@ -42,9 +42,9 @@ class Misaligned(Dataset):
             [
                 transforms.ToPILImage(),
                 transforms.Resize(self.sz),
-                transforms.Grayscale(),
+                # transforms.Grayscale(),
                 transforms.ToTensor(),
-                transforms.Normalize(self.mean[0], self.std[0]),
+                transforms.Normalize(self.mean[:3], self.std[:3]),
             ]
         )
 
@@ -53,7 +53,7 @@ class Misaligned(Dataset):
                 transforms.ToPILImage(mode="F"),
                 transforms.Resize(self.sz),
                 transforms.ToTensor(),
-                transforms.Normalize(self.mean[1], self.std[1]),
+                transforms.Normalize(self.mean[3], self.std[3]),
             ]
         )
         return torch.cat([rgb_tfms(rgb), red_tfms(red)])

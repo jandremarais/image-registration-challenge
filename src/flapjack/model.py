@@ -143,14 +143,14 @@ class Model(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=2)
+        self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=4)
         self.rn.fc = nn.Linear(512, 8)
         # self.rn.fc = nn.Conv2d(512, 2, 1)
 
     def forward(self, x):
         x = self.rn(x)
         x = F.sigmoid(x)
-        x = 2 * x - 1
+        x = 0.5 * x - 0.25
         return x
 
     def training_step(self, batch, batch_idx):
