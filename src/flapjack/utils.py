@@ -2,6 +2,7 @@ from typing import Tuple
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader, Dataset
 
 
@@ -34,7 +35,7 @@ def warp_from_target(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarr
     dst = np.array([[0, 0], [sz - 1, 0], [sz - 1, sz - 1], [0, sz - 1]]).astype(
         np.float32
     )
-    warp_mat = cv2.getAffineTransform(dst[:3] - y[:3], dst[:3])
+    warp_mat = cv2.getAffineTransform(dst[:3] - y[:3]*sz, dst[:3])
     red_aligned = cv2.warpAffine(x[..., -1], warp_mat, (sz, sz))
     return np.concatenate([x[..., :3], red_aligned[..., None]], -1), warp_mat
 
