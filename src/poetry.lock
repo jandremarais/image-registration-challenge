@@ -127,18 +127,6 @@ version = "2.10"
 
 [[package]]
 category = "main"
-description = "Open Source Differentiable Computer Vision Library for PyTorch"
-name = "kornia"
-optional = false
-python-versions = ">=3.6"
-version = "0.3.1"
-
-[package.dependencies]
-numpy = "*"
-torch = "1.5.0"
-
-[[package]]
-category = "main"
 description = "Python implementation of Markdown."
 name = "markdown"
 optional = false
@@ -519,7 +507,7 @@ version = "0.34.2"
 test = ["pytest (>=3.0.0)", "pytest-cov"]
 
 [metadata]
-content-hash = "1a6a5e002018b79bc069085e3e9830cd801bca2ac907080350c5f41151105ab8"
+content-hash = "e1ebeea9ea90f29e59c987de9b55e5392e541488e38683b39e3bdd3081895ca2"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -597,9 +585,6 @@ grpcio = [
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},
-]
-kornia = [
-    {file = "kornia-0.3.1-py2.py3-none-any.whl", hash = "sha256:e6fb8a6eae2e09284b7d9c3b8d1a0f3bc857cd4c2f009bb56f3790953adf43e4"},
 ]
 markdown = [
     {file = "Markdown-3.2.2-py3-none-any.whl", hash = "sha256:c467cd6233885534bf0fe96e62e3cf46cfc1605112356c4f9981512b8174de59"},
