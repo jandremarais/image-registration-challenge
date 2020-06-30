@@ -96,7 +96,6 @@ def crop_misaligned(
 
 
 
-
 def compute_stats(ds: Dataset):
     dl = DataLoader(
         ds,
