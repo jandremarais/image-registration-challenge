@@ -1,19 +1,28 @@
 # import random
 # from functools import partial
 from pathlib import Path
+
 # from typing import List, Tuple
 
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
+
 # from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
+
 # from torchvision.transforms import functional as TF
 
 
 class Misaligned(Dataset):
-    def __init__(self, path: Path, sz: int = 128, mean=(0, 0, 0, 0), std=(1, 1, 1, 1)):
+    def __init__(
+        self,
+        path: Path,
+        sz: int = 128,
+        mean=(0.4571, 0.4437, 0.3610, 0.0208),
+        std=(0.1910, 0.1690, 0.1431, 0.0111),
+    ):
         super().__init__()
         self.image_fns = list((path / "images").iterdir())
         self.target_fns = [
