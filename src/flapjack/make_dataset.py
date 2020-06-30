@@ -111,7 +111,7 @@ master_valid = pd.read_pickle(data / "master_manifest_val_red.pkl")
 train_ids = master_train["survey_id"].unique()
 valid_ids = master_valid["survey_id"].unique()
 
-images_per_survey = 100
+images_per_survey = 1000
 sz = 400
 max_angle = 15
 max_shift = 30
@@ -162,8 +162,3 @@ for idx in valid_ids:
             np.save(data / f"{folder}/valid/images/image_{idx}_{ts}.npy", x)
             np.save(data / f"{folder}/valid/targets/target_{idx}_{ts}.npy", y)
             n += 1
-
-
-# DONT DELETE
-# warp_mat = cv2.getAffineTransform(dst[:3] - diff_corners[:3], dst[:3])
-# red_aligned_crop = cv2.warpAffine(red_crop, warp_mat, (sz, sz))

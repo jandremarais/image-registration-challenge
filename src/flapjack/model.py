@@ -152,7 +152,8 @@ class Model(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        return {"loss": F.mse_loss(y_hat, y)}
+        loss = F.mse_loss(y_hat, y)
+        return {"loss": loss, "log": {'loss': loss}}
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
