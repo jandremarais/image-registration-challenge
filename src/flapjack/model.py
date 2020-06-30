@@ -143,20 +143,16 @@ class Model(pl.LightningModule):
         super().__init__()
         self.hparams = hparams
         self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=4)
-        self.rn.fc = nn.Linear(512, 3)
+        self.rn.fc = nn.Linear(512, 8)
 
     def forward(self, x):
-        # x = self.l1(x.view(x.size(0), -1))
         x = self.rn(x)
-        x = F.sigmoid(x)
-        x = x * 44 - 22
         return x
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        logs = {"loss": F.mse_loss(y_hat, y)}
-        return {"loss": F.mse_loss(y_hat, y), "log": logs}
+        return {"loss": F.mse_loss(y_hat, y)}
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
@@ -171,8 +167,8 @@ class Model(pl.LightningModule):
     def prepare_data(self):
         data = Path(self.hparams.data_path)
 
-        self.train_ds = Misaligned(data / "train", sz=224)
-        self.valid_ds = Misaligned(data / "valid", sz=224)
+        self.train_ds = Misaligned(data / "train", sz=self.hparams.sz)
+        self.valid_ds = Misaligned(data / "valid", sz=self.hparams.sz)
 
     def train_dataloader(self):
         return DataLoader(
@@ -207,5 +203,6 @@ class Model(pl.LightningModule):
         parser.add_argument("--epochs", default=50, type=int)
         parser.add_argument("--batch_size", default=8, type=int)
         parser.add_argument("--nw", default=1, type=int)
+        parser.add_argument("--sz", default=128, type=int)
         parser.add_argument("--data_path", type=str, default="./")
         return parser
