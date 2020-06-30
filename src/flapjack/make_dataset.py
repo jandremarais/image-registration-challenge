@@ -61,15 +61,17 @@ def rotate_points(
 def crop_misaligned(
     rgb: np.ndarray,
     red: np.ndarray,
-    sz: int = 400,
+    sz_range: Tuple[int, int] = (300, 600),
     max_angle: int = 10,
-    max_shift: int = 30,
+    max_shift: float = 0.1,
+    normalize: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     H, W = red.shape
     assert rgb.shape[:2] == (H, W)
 
+    sz = random.randint(*sz_range)
     # consider sampling from mask
-    cx, cy = (random.randint(0, W - sz / 2), random.randint(0, H - sz / 2))
+    cx, cy = (random.randint(0, W - sz // 2), random.randint(0, H - sz // 2))
     rgb_corners = square_from_center(cx, cy, sz)
 
     a = random.randint(0, 360)
@@ -85,8 +87,8 @@ def crop_misaligned(
     a = random.randint(-max_angle, max_angle)
     red_corners = rotate_points(rgb_corners, a, (cx, cy))
 
-    dx = random.randint(-max_shift, max_shift)
-    dy = random.randint(-max_shift, max_shift)
+    dx = random.randint(int(-max_shift * sz), int(max_shift * sz))
+    dy = random.randint(int(-max_shift * sz), int(max_shift * sz))
 
     red_corners[:, 0] += dx
     red_corners[:, 1] += dy
@@ -101,6 +103,8 @@ def crop_misaligned(
 
     x = np.concatenate([rgb_crop.astype(np.float32), red_crop[..., None]], -1)
 
+    if normalize:
+        diff_corners /= sz
     return x, diff_corners
 
 
@@ -111,10 +115,11 @@ master_valid = pd.read_pickle(data / "master_manifest_val_red.pkl")
 train_ids = master_train["survey_id"].unique()
 valid_ids = master_valid["survey_id"].unique()
 
-images_per_survey = 1000
-sz = 400
+images_per_survey = 1500
+sz_range = (300, 600)
+# sz = 400
 max_angle = 15
-max_shift = 30
+max_shift = 0.1
 
 folder = "crops"
 
@@ -131,7 +136,12 @@ for idx in train_ids:
     n = 0
     while n < images_per_survey:
         x, y = crop_misaligned(
-            rgb, red, sz=sz, max_angle=max_angle, max_shift=max_shift
+            rgb,
+            red,
+            sz_range=sz_range,
+            max_angle=max_angle,
+            max_shift=max_shift,
+            normalize=True,
         )
 
         if (x[..., 0] == 0).mean() > 0.5:
@@ -152,7 +162,12 @@ for idx in valid_ids:
     n = 0
     while n < images_per_survey:
         x, y = crop_misaligned(
-            rgb, red, sz=sz, max_angle=max_angle, max_shift=max_shift
+            rgb,
+            red,
+            sz_range=sz_range,
+            max_angle=max_angle,
+            max_shift=max_shift,
+            normalize=True,
         )
 
         if (x[..., 0] == 0).mean() > 0.5:
