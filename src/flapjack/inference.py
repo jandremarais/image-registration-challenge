@@ -51,8 +51,9 @@ def predict_pair(rgb: np.ndarray, red: np.ndarray, model):
     x = np.concatenate([rgb.astype(np.float32), red[..., None]], -1)
     tx = transform(x)
     yhat = model(tx[None].to(model.device))
-    yhat = yhat.view(4, 2).detach().cpu().numpy()
-    return warp_from_target(x, yhat)
+    yhat = yhat[0].detach().cpu().numpy()
+    pts = np.array([yhat[:, 0, 0], yhat[:, 0, 1], yhat[:, 1, 1], yhat[:, 1, 0]])
+    return warp_from_target(x, pts)
 
 
 def predict_aero_pair(survey_id: int, tile: int, path: Path, model):
@@ -72,33 +73,3 @@ def predict_aero_pair(survey_id: int, tile: int, path: Path, model):
 
 def predict_ortho(rgb, red):
     pass
-
-
-model = Model.load_from_checkpoint(
-    "lightning_logs/version_56/checkpoints/epoch=30.ckpt"
-)
-
-model.eval()
-
-data = Path('/home/jan/data/aero/')
-
-px, mat = predict_aero_pair(8493, 3, data, model)
-plot(px, figsize=(10, 10), sidebyside=False)
-
-plot(px[800:900, 0:200], figsize=(20, 10))
-
-
-from flapjack.data import Misaligned
-
-ds = Misaligned(data/'crops/valid', sz=224)
-
-x, y = ds[0]
-
-yhat = model(x[None].to(model.device))
-yhat = yhat.view(4, 2).detach().cpu().numpy()
-warp_from_target(x, yhat)
-
-x[..., -1].shape
-
-yhat
-y.view(4, 2)

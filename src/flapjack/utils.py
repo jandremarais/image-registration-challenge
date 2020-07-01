@@ -95,7 +95,6 @@ def crop_misaligned(
     return x, diff_corners
 
 
-
 def compute_stats(ds: Dataset):
     dl = DataLoader(
         ds,
@@ -120,15 +119,19 @@ def compute_stats(ds: Dataset):
     return mean, std
 
 
-def warp_from_target(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    sz = x.shape[0]
+def warp_from_target(red: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    sz = red.shape[0]
     dst = np.array([[0, 0], [sz - 1, 0], [sz - 1, sz - 1], [0, sz - 1]]).astype(
         np.float32
     )
-    warp_mat = cv2.getAffineTransform(dst[:3] - y[:3]*sz, dst[:3])
-    red_aligned = cv2.warpAffine(x[..., -1], warp_mat, (sz, sz))
-    return np.concatenate([x[..., :3], red_aligned[..., None]], -1), warp_mat
+    warp_mat = cv2.getAffineTransform(dst[:3] - y[:3], dst[:3])
+    red_aligned = cv2.warpAffine(red, warp_mat, (sz, sz))
+    return red_aligned, warp_mat
 
+
+def resize_to(im, ref):
+    h, w = ref.shape[:2]
+    return cv2.resize(im, (w, h), cv2.INTER_LINEAR)
 
 def plot(x, y=None, sidebyside=True, **kwargs):
     if sidebyside:

@@ -5,10 +5,15 @@ from typing import Tuple
 import cv2
 import numpy as np
 import pandas as pd
+import torch
 import typer
+from matplotlib import pyplot as plt
+from torch.utils.data import DataLoader
 
+from flapjack.data import Misaligned
+from flapjack.inference import predict_pair
 from flapjack.model import Model
-from flapjack.utils import crop_misaligned, load_red, load_rgb
+from flapjack.utils import crop_misaligned, load_red, load_rgb, resize_to
 
 app = typer.Typer()
 
@@ -69,17 +74,56 @@ def make_dataset(
     typer.echo("Completed!")
 
 
-# def train
-
-@app.command
-def predict(
-    rgb_path: Path,
-    red_path: Path,
-    ckpt: Path = Path("checkpoints/bst.ckpt"),
-    dst: Path = Path("."),
+@app.command()
+def predict_tile_pair(
+    rgb_path: str,
+    red_path: str,
+    ckpt: str = "checkpoints/bst.ckpt"
 ):
     model = Model.load_from_checkpoint(ckpt)
-    print(model.sz)
+
+    rgb = np.load(rgb_path).squeeze()[..., :3]
+    red = np.load(red_path).squeeze()
+
+    rgb = resize_to(rgb, red)
+    # sz = min(red.shape)
+    sz=400
+
+    red = red[:sz, :sz]
+    rgb = rgb[:sz, :sz]
+
+    _, mat = predict_pair(rgb, red, model)
+    red_a = cv2.warpAffine(red, mat, (sz, sz))
+    print(mat)
+    fig, ax = plt.subplots(1, 3, figsize=(21, 7))
+    ax[0].imshow(rgb)
+    ax[1].imshow(red)
+    ax[2].imshow(red_a)
+    ax[0].set_title('RGB')
+    ax[1].set_title('Misaligned RED')
+    ax[2].set_title('Aligned RED')
+    for a in ax: a.grid()
+    plt.show()
+
+
+@app.command()
+def evaluate(valid_path: str, ckpt: str):
+    model = Model.load_from_checkpoint(ckpt)
+    ds = Misaligned(Path(valid_path))
+    dl = DataLoader(ds, num_workers=6, shuffle=False, batch_size=16)
+    model.eval()
+
+    total_dist = 0
+    n = 0
+    with torch.no_grad():
+        for x, y in dl:
+            yhat = model(x)
+            cdist = ((y - yhat) ** 2).sum(-1).sqrt()
+            total_dist += cdist.sum()
+            n += len(x)
+
+        mace = total_dist/n
+    typer.echo(f'MACE: {mace}')
 
 
 if __name__ == "__main__":

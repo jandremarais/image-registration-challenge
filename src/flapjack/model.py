@@ -143,7 +143,7 @@ class Model(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=2)
+        rn = ResNet(BasicBlock, [3, 4, 6, 3], n_in=2)
         # rn = ResNet(Bottleneck, [3, 4, 6, 3], n_in=2, groups=32, width_per_group=4)
         mods = list(rn.children())[:-2]  + [nn.Conv2d(512, 2, 1, stride=2)]
         self.m = nn.Sequential(*mods)
