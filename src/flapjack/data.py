@@ -63,6 +63,7 @@ class Misaligned(Dataset):
     def __getitem__(self, index):
         x = np.load(self.image_fns[index])
         y = np.load(self.target_fns[index])
+        y *= self.sz
         x = self.transform(x)
         return (
             x,
