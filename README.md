@@ -63,3 +63,4 @@ You can run `tensorboard --logdir ./lightning_logs` to inspect the loss curves a
 - implement alignment based on multiple patches
 - make CLI more user friendly and type safe.
 - remove deprecated code
+- implement hyperparemeter search

@@ -1,18 +1,11 @@
-# import random
-# from functools import partial
 from pathlib import Path
-
-# from typing import List, Tuple
 
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-# from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-
-# from torchvision.transforms import functional as TF
 
 
 class Misaligned(Dataset):
@@ -69,8 +62,8 @@ class Misaligned(Dataset):
             x,
             torch.tensor(
                 [
-                    [[y[0, 0], y[1, 0]], [y[3, 0], y[2, 0]],],
-                    [[y[0, 1], y[1, 1]], [y[3, 1], y[2, 1]],],
+                    [[y[0, 0], y[1, 0]], [y[3, 0], y[2, 0]]],
+                    [[y[0, 1], y[1, 1]], [y[3, 1], y[2, 1]]],
                 ]
             ),
         )

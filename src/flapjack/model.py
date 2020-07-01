@@ -5,13 +5,13 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision.models.resnet import BasicBlock, Bottleneck, conv1x1
 
 from .data import Misaligned
 
 
+# adapted from https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
 class ResNet(nn.Module):
     def __init__(
         self,

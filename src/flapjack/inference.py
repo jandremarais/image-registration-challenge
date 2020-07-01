@@ -1,16 +1,11 @@
-# !%reload_ext autoreload
-# !%autoreload 2
 from pathlib import Path
 
 import cv2
 import numpy as np
-import pytorch_lightning as pl
 import torch
-from matplotlib import pyplot as plt
 from torchvision import transforms
 
-from flapjack.model import Model
-from flapjack.utils import plot, warp_from_target
+from flapjack.utils import warp_from_target
 
 
 def transform(x, sz=224, mean=(0.4382, 0.0208), std=(0.1704, 0.0111)):
