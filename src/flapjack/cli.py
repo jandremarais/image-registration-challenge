@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from flapjack.data import Misaligned
 from flapjack.inference import predict_pair
 from flapjack.model import Model
-from flapjack.utils import crop_misaligned, load_red, load_rgb, resize_to
+from flapjack.utils import crop_misaligned, load_red, load_rgb, resize_to, warp_from_target
 
 app = typer.Typer()
 
@@ -94,8 +94,8 @@ def predict_tile_pair(rgb_path: str, red_path: str, ckpt: str = "checkpoints/bst
     red = np.load(red_path).squeeze()
 
     rgb = resize_to(rgb, red)
-    # sz = min(red.shape)
-    sz = 400
+    sz = min(red.shape)
+    # sz = 400
 
     red = red[:sz, :sz]
     rgb = rgb[:sz, :sz]
@@ -117,22 +117,73 @@ def predict_tile_pair(rgb_path: str, red_path: str, ckpt: str = "checkpoints/bst
 
 @app.command()
 def evaluate(valid_path: str, ckpt: str):
+    """[summary]
+
+    Args:
+        valid_path (str): Path to validation dataset.
+        ckpt (str): Path to model checkpoint.
+    """
     model = Model.load_from_checkpoint(ckpt)
     ds = Misaligned(Path(valid_path))
     dl = DataLoader(ds, num_workers=6, shuffle=False, batch_size=16)
     model.eval()
 
     total_dist = 0
+    total_dist_o = 0
     n = 0
     with torch.no_grad():
         for x, y in dl:
             yhat = model(x)
             cdist = ((y - yhat) ** 2).sum(-1).sqrt()
+            cdist_o = (y ** 2).sum(-1).sqrt()
             total_dist += cdist.sum()
+            total_dist_o += cdist_o.sum()
             n += len(x)
 
         mace = total_dist / n
-    typer.echo(f"MACE: {mace}")
+        mace_o = total_dist_o / n
+    typer.echo(f"MACE (misaligned): {mace_o}")
+    typer.echo(f"MACE (aligned): {mace}")
+
+
+@app.command()
+def plot_example_from_valid_ds(idx: int, valid_path: str, ckpt: str):
+    ds = Misaligned(Path('/home/jan/data/aero/crops/valid'))
+
+    x, y = ds[idx]
+
+    gray = x[0].numpy()
+    red = x[1].numpy()
+
+    model = Model.load_from_checkpoint(ckpt)
+    model.eval()
+    preds = model(x[None].to(model.device))
+    pred = preds[0]
+
+    pts = torch.stack([y[:, 0, 0], y[:, 0, 1], y[:, 1, 1], y[:, 1, 0]])
+    pts = pts.numpy()
+
+    pred_pts = torch.stack([pred[:, 0, 0], pred[:, 0, 1], pred[:, 1, 1], pred[:, 1, 0]])
+    pred_pts = pred_pts.detach().cpu().numpy()
+
+    red_a, mat = warp_from_target(red, pts)
+
+    red_p, mat = warp_from_target(red, pred_pts)
+    fig, ax = plt.subplots(2, 2, figsize=(20, 20))
+    ax[0, 0].imshow(gray, cmap='gray')
+    ax[0, 1].imshow(red)
+    ax[1, 0].imshow(red_p)
+    ax[1, 1].imshow(red_a)
+    
+    ax[0, 0].set_title('Grayscale')
+    ax[0, 0].grid(color='w')
+    ax[0, 1].set_title('RED - random transform')
+    ax[0, 1].grid(color='w')
+    ax[1, 0].set_title('RED - predicted correction')
+    ax[1, 0].grid(color='w')
+    ax[1, 1].set_title('RED - true')
+    ax[1, 1].grid(color='w')
+    plt.show()
 
 
 if __name__ == "__main__":
