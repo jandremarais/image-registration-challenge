@@ -27,6 +27,18 @@ def make_dataset(
     max_angle: int = 15,
     max_shift: float = 0.1,
 ):
+    """[summary]
+
+    Args:
+        data (Path): Path to the parent directory of the survey_ID directories
+        img_folder (str, optional): Directory to store the crops. Defaults to "crops".
+        images_per_survey (int, optional): Number of crops per survey. Defaults to 100.
+        sz_range (Tuple[int, int], optional): Range to sample the size parameter from.
+            Defaults to (300, 600).
+        max_angle (int, optional): Maximum angle in bother directions. Defaults to 15.
+        max_shift (float, optional): Maximum shift as a proportion of the size.
+            Defaults to 0.1.
+    """
     master_train = pd.read_pickle(data / "master_manifest_train_red.pkl")
     master_valid = pd.read_pickle(data / "master_manifest_val_red.pkl")
 
@@ -75,11 +87,7 @@ def make_dataset(
 
 
 @app.command()
-def predict_tile_pair(
-    rgb_path: str,
-    red_path: str,
-    ckpt: str = "checkpoints/bst.ckpt"
-):
+def predict_tile_pair(rgb_path: str, red_path: str, ckpt: str = "checkpoints/bst.ckpt"):
     model = Model.load_from_checkpoint(ckpt)
 
     rgb = np.load(rgb_path).squeeze()[..., :3]
@@ -87,7 +95,7 @@ def predict_tile_pair(
 
     rgb = resize_to(rgb, red)
     # sz = min(red.shape)
-    sz=400
+    sz = 400
 
     red = red[:sz, :sz]
     rgb = rgb[:sz, :sz]
@@ -99,10 +107,11 @@ def predict_tile_pair(
     ax[0].imshow(rgb)
     ax[1].imshow(red)
     ax[2].imshow(red_a)
-    ax[0].set_title('RGB')
-    ax[1].set_title('Misaligned RED')
-    ax[2].set_title('Aligned RED')
-    for a in ax: a.grid()
+    ax[0].set_title("RGB")
+    ax[1].set_title("Misaligned RED")
+    ax[2].set_title("Aligned RED")
+    for a in ax:
+        a.grid()
     plt.show()
 
 
@@ -122,8 +131,8 @@ def evaluate(valid_path: str, ckpt: str):
             total_dist += cdist.sum()
             n += len(x)
 
-        mace = total_dist/n
-    typer.echo(f'MACE: {mace}')
+        mace = total_dist / n
+    typer.echo(f"MACE: {mace}")
 
 
 if __name__ == "__main__":
