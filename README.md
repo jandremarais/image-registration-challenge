@@ -43,27 +43,23 @@ to create a virtual environment with all the python dependencies installed.
 ### Using model from checkpoint
 
 ```
-python src/predict.py /path/to/rgb.npy /path/to/red.npy /path/to/checkpoint dst
+python src/flapjack/cli.py predict.py /path/to/rgb.npy /path/to/red.npy /path/to/checkpoint dst
 ```
 
 ### Training your own model
 
-## Approach
+This will train the model with the same starting point as the one reported on:
 
-We attempt to solve the multimodal image registration problem by training a CNN to estimate the mapping between a pair of images by predicting the 4-point homgraphy given the pair of images stacked channel-wise.
+```
+python src/flapjack/train.py --epochs 20 --batch_size 64 --nw 8 --data_path /home/jan/data/aero/crops --learning_rate 0.0001 --gpus 1
+```
 
-The first step is to create a dataset for a CNN to learn from.
-This process to create one training example is as follows:
+This will also store the logs in `./lightning_logs`.
+You can run `tensorboard --logdir ./lightning_logs` to inspect the loss curves as they train.
 
-# STEPS
-# load rgb
-# load red
-# resize rgb to red size (since red is smaller)
-# sample a random point in rgb
-# get the corners of a square with this point as the center
-# rotate these corners at a random angle
-# crop the rgb image defined by these corners
-# do a random translation of the center
-# get the corners of a square with this point as the center
-# rotate these corners at a random angle within margin or previous angle
-# crop the red image defined by these corners
+## To Do
+
+- Write tests for main functions
+- implement alignment based on multiple patches
+- make CLI more user friendly and type safe.
+- remove deprecated code

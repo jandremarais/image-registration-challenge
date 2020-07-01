@@ -133,6 +133,7 @@ def resize_to(im, ref):
     h, w = ref.shape[:2]
     return cv2.resize(im, (w, h), cv2.INTER_LINEAR)
 
+
 def plot(x, y=None, sidebyside=True, **kwargs):
     if sidebyside:
         fig, ax = plt.subplots(1, 2, **kwargs)
