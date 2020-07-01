@@ -11,6 +11,10 @@ from torchvision.models.resnet import BasicBlock, Bottleneck, conv1x1
 from .data import Misaligned
 
 
+<<<<<<< HEAD
+=======
+# adapted from https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+>>>>>>> last-sprint
 class ResNet(nn.Module):
     def __init__(
         self,
@@ -142,6 +146,7 @@ class Model(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
+<<<<<<< HEAD
         self.rn = ResNet(BasicBlock, [2, 2, 2, 2], n_in=4)
         self.rn.fc = nn.Linear(512, 3)
 
@@ -150,29 +155,68 @@ class Model(pl.LightningModule):
         x = self.rn(x)
         x = F.sigmoid(x)
         x = x * 44 - 22
+=======
+        rn = ResNet(BasicBlock, [3, 4, 6, 3], n_in=2)
+        # rn = ResNet(Bottleneck, [3, 4, 6, 3], n_in=2, groups=32, width_per_group=4)
+        mods = list(rn.children())[:-2]  + [nn.Conv2d(512, 2, 1, stride=2)]
+        self.m = nn.Sequential(*mods)
+        # self.rn.fc = nn.Conv2d(512, 2, 1)
+
+    def forward(self, x):
+        x = self.m(x)
+        # x = F.sigmoid(x)
+        # x = 0.5 * x - 0.25
+>>>>>>> last-sprint
         return x
 
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
+<<<<<<< HEAD
         logs = {"loss": F.mse_loss(y_hat, y)}
         return {"loss": F.mse_loss(y_hat, y), "log": logs}
+=======
+        # loss = F.mse_loss(y_hat, y)
+        loss = F.smooth_l1_loss(y_hat, y)
+        return {"loss": loss, "log": {"loss": loss}}
+>>>>>>> last-sprint
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
+<<<<<<< HEAD
         return {"val_loss": F.mse_loss(y_hat, y)}
 
     def validation_epoch_end(self, outputs):
         val_loss_mean = torch.stack([x["val_loss"] for x in outputs]).mean()
         logs = {"val_loss_mean": val_loss_mean}
         return {"val_loss": val_loss_mean, "log": logs}
+=======
+        return {
+            "val_mse_loss": F.mse_loss(y_hat, y),
+            "val_l1_loss": F.smooth_l1_loss(y_hat, y),
+        }
+
+    def validation_epoch_end(self, outputs):
+        val_mse_loss_mean = torch.stack([x["val_mse_loss"] for x in outputs]).mean()
+        val_l1_loss_mean = torch.stack([x["val_l1_loss"] for x in outputs]).mean()
+        logs = {
+            "val_l1_loss_mean": val_l1_loss_mean,
+            "val_mse_loss_mean": val_mse_loss_mean,
+        }
+        return {"val_loss": val_l1_loss_mean, "log": logs}
+>>>>>>> last-sprint
 
     def prepare_data(self):
         data = Path(self.hparams.data_path)
 
+<<<<<<< HEAD
         self.train_ds = Misaligned(data / "train", sz=224)
         self.valid_ds = Misaligned(data / "valid", sz=224)
+=======
+        self.train_ds = Misaligned(data / "train", sz=128)
+        self.valid_ds = Misaligned(data / "valid", sz=128)
+>>>>>>> last-sprint
 
     def train_dataloader(self):
         return DataLoader(
@@ -192,6 +236,10 @@ class Model(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters())
+<<<<<<< HEAD
+=======
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
+>>>>>>> last-sprint
         scheduler = torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=self.hparams.learning_rate,
@@ -205,7 +253,13 @@ class Model(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=0.02, type=float)
         parser.add_argument("--epochs", default=50, type=int)
+<<<<<<< HEAD
         parser.add_argument("--batch_size", default=8, type=int)
         parser.add_argument("--nw", default=1, type=int)
+=======
+        parser.add_argument("--batch_size", default=32, type=int)
+        parser.add_argument("--nw", default=1, type=int)
+        parser.add_argument("--sz", default=128, type=int)
+>>>>>>> last-sprint
         parser.add_argument("--data_path", type=str, default="./")
         return parser
