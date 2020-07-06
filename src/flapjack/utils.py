@@ -144,3 +144,37 @@ def plot(x, y=None, sidebyside=True, **kwargs):
         ax.imshow(x[..., :3].astype(np.uint8), alpha=0.5)
         ax.imshow(x[..., 3], cmap="gray", alpha=0.5)
     return ax
+
+
+def check_random_synth_sample(path: Path):
+    """Visualise synthetic data sample.
+    Plots RGB, RED and aligned RED (based on y).
+
+    Args:
+        path (Path): Path to synthetic misaligned crops.
+    """
+    images = list((path / "images").iterdir())
+
+    img_fn = random.choice(images)
+    tgt_fn = img_fn.name.replace("image", "target")
+    tgt_fn = path / f"targets/{tgt_fn}"
+
+    x = np.load(img_fn)
+    y = np.load(tgt_fn)
+
+    rgb = x[..., :3].astype("uint8")
+    red = x[..., 3]
+
+    sz = x.shape[0]
+    dst = np.array([[0, 0], [sz, 0], [sz, sz], [0, sz]]).astype(np.float32)
+    src = dst - y * sz
+
+    mat = cv2.getAffineTransform(src[:3], dst[:3])
+    red_a = cv2.warpAffine(red, mat, (sz, sz))
+
+    fig, ax = plt.subplots(1, 3, figsize=(15, 15))
+    ax[0].imshow(rgb)
+    ax[1].imshow(red)
+    ax[2].imshow(red_a)
+
+    for a in ax: a.grid(color='w')
