@@ -74,6 +74,9 @@ def make_dataset(
                     normalize=True,
                 )
 
+                # this is not a good way of doing it
+                # will end up with more smaller images since they are less likely to be
+                # empty
                 if (x[..., 0] == 0).mean() > 0.5:
                     continue
                 else:
