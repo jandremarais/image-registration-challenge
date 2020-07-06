@@ -64,7 +64,7 @@ def crop_misaligned(
     a = random.randint(0, 360)
     rgb_corners = rotate_points(rgb_corners, a, (cx, cy))
 
-    dst = np.array([[0, 0], [sz - 1, 0], [sz - 1, sz - 1], [0, sz - 1]]).astype(
+    dst = np.array([[0, 0], [sz, 0], [sz, sz], [0, sz]]).astype(
         np.float32
     )
 
