@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-from torch.utils.data import DataLoader, Dataset
-
-
-=======
 import random
 from pathlib import Path
 from typing import Tuple
@@ -100,7 +95,6 @@ def crop_misaligned(
     return x, diff_corners
 
 
->>>>>>> last-sprint
 def compute_stats(ds: Dataset):
     dl = DataLoader(
         ds,
@@ -123,8 +117,6 @@ def compute_stats(ds: Dataset):
     std /= nb_samples
 
     return mean, std
-<<<<<<< HEAD
-=======
 
 
 def warp_from_target(red: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -152,4 +144,3 @@ def plot(x, y=None, sidebyside=True, **kwargs):
         ax.imshow(x[..., :3].astype(np.uint8), alpha=0.5)
         ax.imshow(x[..., 3], cmap="gray", alpha=0.5)
     return ax
->>>>>>> last-sprint

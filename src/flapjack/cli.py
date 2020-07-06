@@ -13,7 +13,13 @@ from torch.utils.data import DataLoader
 from flapjack.data import Misaligned
 from flapjack.inference import predict_pair
 from flapjack.model import Model
-from flapjack.utils import crop_misaligned, load_red, load_rgb, resize_to, warp_from_target
+from flapjack.utils import (
+    crop_misaligned,
+    load_red,
+    load_rgb,
+    resize_to,
+    warp_from_target,
+)
 
 app = typer.Typer()
 
@@ -148,7 +154,7 @@ def evaluate(valid_path: str, ckpt: str):
 
 @app.command()
 def plot_example_from_valid_ds(idx: int, valid_path: str, ckpt: str):
-    ds = Misaligned(Path('/home/jan/data/aero/crops/valid'))
+    ds = Misaligned(Path("/home/jan/data/aero/crops/valid"))
 
     x, y = ds[idx]
 
@@ -170,19 +176,19 @@ def plot_example_from_valid_ds(idx: int, valid_path: str, ckpt: str):
 
     red_p, mat = warp_from_target(red, pred_pts)
     fig, ax = plt.subplots(2, 2, figsize=(20, 20))
-    ax[0, 0].imshow(gray, cmap='gray')
+    ax[0, 0].imshow(gray, cmap="gray")
     ax[0, 1].imshow(red)
     ax[1, 0].imshow(red_p)
     ax[1, 1].imshow(red_a)
-    
-    ax[0, 0].set_title('Grayscale')
-    ax[0, 0].grid(color='w')
-    ax[0, 1].set_title('RED - random transform')
-    ax[0, 1].grid(color='w')
-    ax[1, 0].set_title('RED - predicted correction')
-    ax[1, 0].grid(color='w')
-    ax[1, 1].set_title('RED - true')
-    ax[1, 1].grid(color='w')
+
+    ax[0, 0].set_title("Grayscale")
+    ax[0, 0].grid(color="w")
+    ax[0, 1].set_title("RED - random transform")
+    ax[0, 1].grid(color="w")
+    ax[1, 0].set_title("RED - predicted correction")
+    ax[1, 0].grid(color="w")
+    ax[1, 1].set_title("RED - true")
+    ax[1, 1].grid(color="w")
     plt.show()
 
 
